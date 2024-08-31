@@ -1,23 +1,36 @@
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { requestToServer } from '../api/GlobalAPI';
+import { useGlobalData } from '../provider/AppDataProvider';
 const Login = () => {
+  const {setUserRole} = useGlobalData()
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
+  const navigate = useNavigate();
+  const handleClick = (redirect) => {
+    navigate(redirect);
+  };
+
   const onSubmit = (data) => {
-    const { username, password } = data;
-
-    // Here, you would handle the login logic (e.g., call an API)
-    // For demonstration purposes, let's assume the correct credentials are 'admin' and 'password'
-
-    if (username === 'admin' && password === 'password') {
-      toast.success('Login successful!');
-    } else {
-      toast.error('Wrong credentials. Please try again.');
-    }
+    requestToServer('post', 'login', data)
+      .then((response) => {
+        const { role } = response[0];
+        if (role === 0) {
+          toast.error('Wrong credentials. Please try again.');
+          return;
+        }
+        toast.success('Login successful!');
+        handleClick('/dashboard')
+        console.log('Server GET response:', response);
+        setUserRole(role);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      })
   };
   return (
     <div

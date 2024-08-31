@@ -3,6 +3,7 @@ import RoundedPanel from "./RoundedPanel"
 import { FaEdit, FaDownload  } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { useState, useMemo } from 'react';
+import { LuArchive } from "react-icons/lu";
 
 const TablePanel = ({tableTitle, columnNames, data, actionColumn = [], search = false, category = [], sort = false, tableHeight}) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -108,6 +109,14 @@ const TablePanel = ({tableTitle, columnNames, data, actionColumn = [], search = 
                             <FaEdit size={'1.5em'}/>
                           </button>
                         )}
+                        {actionColumn.includes('archive') && (
+                          <button
+                            className="text-green-500 mr-2"
+                            onClick={() => alert(`Archive ${rowIndex}`)}
+                          >
+                            <LuArchive size={'1.5em'}/>
+                          </button>
+                        )}
                         {actionColumn.includes('delete') && (
                           <button
                             className="text-red-500 mr-2"
@@ -124,6 +133,7 @@ const TablePanel = ({tableTitle, columnNames, data, actionColumn = [], search = 
                             <FaDownload size={'1.5em'}/>
                           </button>
                         )}
+                        
                       </td>
                     )}
                   </tr>
