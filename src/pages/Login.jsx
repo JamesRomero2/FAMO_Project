@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { requestToServer } from '../api/GlobalAPI';
 import { useGlobalData } from '../provider/AppDataProvider';
 const Login = () => {
-  const {setUserRole} = useGlobalData()
+  const {setUserRole} = useGlobalData() 
   const {
     register,
     handleSubmit,

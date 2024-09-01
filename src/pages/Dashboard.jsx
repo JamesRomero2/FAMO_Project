@@ -13,6 +13,7 @@ const Dashboard = () => {
     category: 0, 
     user: 0
   })
+  const [notifs, setNotifs] = useState([]);
   const initialization = useCallback(async () => {
     requestToServer('get', 'shelf', '')
       .then((response) => {
@@ -29,6 +30,13 @@ const Dashboard = () => {
       }).catch((error) => {
         console.error('Server GET error:', error);
       });
+    requestToServer('get', 'mynotifs', '')
+      .then((response) => {
+        setNotifs(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+    
   }, []);
   useLayoutEffect(() => {
     initialization();
@@ -88,7 +96,7 @@ const Dashboard = () => {
         />
       </div>
       <div className="flex flex-col gap-4">
-        <Notification/>
+        <Notification notificationItems={notifs}/> 
         <SuppliesSummary/>
       </div>
     </div>

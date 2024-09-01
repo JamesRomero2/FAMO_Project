@@ -59,6 +59,33 @@ export const requestToServer = async (method, eventName, data) => {
                     category: 100,
                     user: 50
                 }
+            ],
+            'mynotifs': [
+                {
+                    important: true,
+                    message: 'Notification 1',
+                    date_published: '2024-08-01 12:00:00',
+                },
+                {
+                    important: false,
+                    message: 'Notification 2',
+                    date_published: '2024-07-02 15:30:00',
+                },
+                {
+                    important: false,
+                    message: 'Notification 3',
+                    date_published: '2024-06-03 09:45:00',
+                },
+                {
+                    important: true,
+                    message: 'Notification 4',
+                    date_published: '2024-05-04 18:00:00',
+                },
+                {
+                    important: false,
+                    message: 'Notification 5',
+                    date_published: '2024-04-05 08:15:00',
+                }
             ]
         }
         return temporaryData[eventName] || {
