@@ -1,7 +1,9 @@
 import axios, { AxiosHeaders } from "axios";
 
+// ENRICO
 // MAKE THIS TRUE IF BACKEND IS CONNECTED AND ADD API_URL
 const HAS_BACKEND = false;
+// SIMILAR TO THIS
 const API_URL = "http://localhost/msis/server/api/v1/server.php";
 
 
