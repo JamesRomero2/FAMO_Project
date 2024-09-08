@@ -12,10 +12,10 @@ export const useGlobalData = () => {
 };
 
 export const AppDataProvider = ({ children }) => {
-  const [userRole, setUserRole] = useState(0);
+  const [userRole, setUserRole] = useState([]);
 
   const resetGlobalContextData = useCallback(() => {
-    setUserRole(0);
+    setUserRole([]);
   }, []);
 
   const globalData = {

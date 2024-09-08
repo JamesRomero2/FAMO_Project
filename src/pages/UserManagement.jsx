@@ -2,36 +2,31 @@
 import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 import TablePanel from "../components/TablePanel";
 import Modal from 'react-modal';
-import { useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+
+import { requestToServer } from "../api/GlobalAPI";
 Modal.setAppElement('#root');
 const UserManagement = () => {
   const [addUserModal, setaddUserModal] = useState(false);
-  const userData = [
-    { name: 'Alice Johnson', role: 'Administrator', "last logged in": '2024-08-20', status: 'Active' },
-    { name: 'Bob Smith', role: 'Director', "last logged in": '2024-08-19', status: 'Inactive' },
-    { name: 'Charlie Brown', role: 'Warehouse Man 1', "last logged in": '2024-08-18', status: 'Active' },
-    { name: 'Daisy Miller', role: 'Warehouse Man 2', "last logged in": '2024-08-17', status: 'Active' },
-    { name: 'Edward Wilson', role: 'Chief 1', "last logged in": '2024-08-16', status: 'Inactive' },
-    { name: 'Fiona Clark', role: 'Chief 2', "last logged in": '2024-08-15', status: 'Active' },
-    { name: 'George Hill', role: 'Chief 3', "last logged in": '2024-08-14', status: 'Active' },
-    { name: 'Hannah Baker', role: 'Chief 4', "last logged in": '2024-08-13', status: 'Inactive' },
-    { name: 'Ivan Diaz', role: 'Administrator', "last logged in": '2024-08-12', status: 'Active' },
-    { name: 'Jessica Evans', role: 'Director', "last logged in": '2024-08-11', status: 'Active' },
-    { name: 'Kevin Foster', role: 'Warehouse Man 1', "last logged in": '2024-08-10', status: 'Inactive' },
-    { name: 'Laura Green', role: 'Warehouse Man 2', "last logged in": '2024-08-09', status: 'Active' },
-    { name: 'Michael Harris', role: 'Chief 1', "last logged in": '2024-08-08', status: 'Inactive' },
-    { name: 'Nina Johnson', role: 'Chief 2', "last logged in": '2024-08-07', status: 'Active' },
-    { name: 'Oscar King', role: 'Chief 3', "last logged in": '2024-08-06', status: 'Active' },
-    { name: 'Paula Lewis', role: 'Chief 4', "last logged in": '2024-08-05', status: 'Inactive' },
-    { name: 'Quinn Martinez', role: 'Administrator', "last logged in": '2024-08-04', status: 'Active' },
-    // More product data...
-  ];
+  const [allUsers, setAllUsers] = useState([]);
+  const initialization = useCallback(async() => {
+    requestToServer('get', 'allUsers', '', false)
+      .then((response) => {
+        setAllUsers(response)
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+    }, [],
+  )
   const closeModal = () => {
     setaddUserModal(false);
   }
+
+  useLayoutEffect(() => {
+    initialization();
+  }, [initialization]);
   return (
     <div className="flex flex-col w-full relative">
       <div className="absolute top-0">
@@ -48,12 +43,12 @@ const UserManagement = () => {
         </div>
       </div>
       <TablePanel
-          tableTitle="Product Inventory"
+          tableTitle="List of Users"
           columnNames={['Name', 'Role', 'Last Logged In', 'Status']}
-          data={userData}
-          actionColumn={[]}
+          data={allUsers}
+          actionColumn={['delete', 'edit']}
           search={false}
-          category={['Administrator', 'Director', 'Warehouse Man 1', 'Warehouse Man 2','Chief 1','Chief 2','Chief 3','Chief 4']}
+          category={['']}
           sort={false}
           tableHeight={'h-full'}
         />
@@ -70,11 +65,21 @@ export const AddUserModal = ({
     handleSubmit,
     watch,
     formState: { errors },
+    reset
   } = useForm();
   
   const onSubmit = (data) => {
-    toast.success("User added successfully!");
-    console.log(data);
+    requestToServer('post', 'addUser', data, false)
+      .then((response) => {
+        if (response[0].success) {
+          toast.success("User added successfully!");
+          reset();
+        } else {
+          toast.error(`Failed Adding User`);
+        }
+      }).catch((error) => {
+        toast.error(`Failed Adding User ${error}`);
+      });
   };
 
   const onError = (errors) => {
@@ -82,9 +87,6 @@ export const AddUserModal = ({
       toast.error(errors[error].message);
     }
   };
-  // const handleSubmit = () => {
-  //   onClose();
-  // };
 
   const handleClose = () => {
     onClose();

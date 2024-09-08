@@ -6,6 +6,7 @@ import Shelf from "../components/Shelf"
 import SuppliesSummary from "../components/SuppliesSummary"
 import TablePanel from "../components/TablePanel"
 import { requestToServer } from "../api/GlobalAPI";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [shelfData, setShelfData] = useState({
@@ -14,8 +15,15 @@ const Dashboard = () => {
     user: 0
   })
   const [notifs, setNotifs] = useState([]);
+  const navigate = useNavigate();
   const initialization = useCallback(async () => {
-    requestToServer('get', 'shelf', '')
+    const user = sessionStorage.getItem('user');
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    requestToServer('get', 'shelf', '', false)
       .then((response) => {
         const { supply, category, user } = response[0];
         const newData = {
@@ -30,17 +38,17 @@ const Dashboard = () => {
       }).catch((error) => {
         console.error('Server GET error:', error);
       });
-    requestToServer('get', 'mynotifs', '')
+    requestToServer('get', 'mynotifs', '', true)
       .then((response) => {
         setNotifs(response);
       }).catch((error) => {
         console.error('Server GET error:', error);
       });
     
-  }, []);
+  }, [navigate]);
   useLayoutEffect(() => {
     initialization();
-  }, [initialization]);
+  }, [initialization, navigate]);
 
   
   const productData = [

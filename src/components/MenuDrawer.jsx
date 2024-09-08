@@ -5,9 +5,7 @@ import { TiDocumentAdd } from "react-icons/ti";
 import { BiLineChart } from "react-icons/bi";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 import MenuDrawerItem from "./MenuDrawerItem";
-import { useGlobalData } from '../provider/AppDataProvider';
 const MenuDrawer = () => {
-  const { userRole } = useGlobalData();
   const menuItems = {
     1 : [
       {
@@ -164,8 +162,8 @@ const MenuDrawer = () => {
       },
     ]
   }
-  // const userAccess = menuItems[userRole];
-  const userAccess = menuItems[1];
+  // const userAccess = menuItems[userRole.role];
+  const userAccess = menuItems[sessionStorage.getItem('user') ? JSON.parse(sessionStorage.getItem('user')).role : 7];
 
   return (
     <div className="flex flex-col h-full left-0 top-14 sticky">

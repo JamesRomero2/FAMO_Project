@@ -2,17 +2,15 @@ import axios, { AxiosHeaders } from "axios";
 
 // ENRICO
 // MAKE THIS TRUE IF BACKEND IS CONNECTED AND ADD API_URL
-const HAS_BACKEND = false;
 // SIMILAR TO THIS
-const API_URL = "http://localhost/msis/server/api/v1/server.php";
+const API_URL = "http://localhost/famoserver/api/v1/server.php";
 
 
 const SERVER_API = axios.create({
     baseURL: API_URL,
 })
 
-export const requestToServer = async (method, eventName, data) => {
-    console.log(data);
+export const requestToServer = async (method, eventName, data, HAS_BACKEND) => {
     if (HAS_BACKEND) {
         const config = {
             headers: new AxiosHeaders({
@@ -20,7 +18,6 @@ export const requestToServer = async (method, eventName, data) => {
                 "Event-Key": eventName,
             }),
             params: method === 'get' ? { parameter: data } : undefined,
-            data: method !== 'get' ? data : undefined,
         };
     
         try {
@@ -30,15 +27,13 @@ export const requestToServer = async (method, eventName, data) => {
                     response = await SERVER_API.get("", {...config});
                     break;
                 case "post":
-                    response = await SERVER_API.post("", config);
+                    response = await SERVER_API.post("",  data, config);
                     break;
                 case "put":
-                    response = await SERVER_API.put("", config);
+                    response = await SERVER_API.put("",  data, config);
                     break;
                 case "delete":
-                    response = await SERVER_API.delete("", {
-                        ...config,
-                    });
+                    response = await SERVER_API.delete("", config);
                     break;
                 default:
                     throw new Error("INVALID HTTP METHOD");
@@ -52,6 +47,8 @@ export const requestToServer = async (method, eventName, data) => {
         const temporaryData = {
             'login' : [
                 {
+                    first_name: 'John',
+                    last_name: 'Doe',
                     role: 1
                 }
             ],
@@ -87,6 +84,73 @@ export const requestToServer = async (method, eventName, data) => {
                     important: false,
                     message: 'Notification 5',
                     date_published: '2024-04-05 08:15:00',
+                }
+            ],
+            'allUsers': [
+                {
+                    name: 'John Doe',
+                    role: 'Admin',
+                    "last logged in": '2024-09-01 10:23:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Jane Doe',
+                    role: 'Director',
+                    "last logged in": '2024-09-01 08:15:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Michael Brown',
+                    role: 'Civil and Sanitary Services Chief',
+                    "last logged in": '2024-08-31 12:45:00',
+                    status: 'inactive'
+                },
+                {
+                    name: 'Emily White',
+                    role: 'Lights, Sounds, and Event Services Chief',
+                    "last logged in": '2024-08-30 09:30:00',
+                    status: 'active'
+                },
+                {
+                    name: 'David Johnson',
+                    role: 'Electrical and Mechanical Service Chief',
+                    "last logged in": '2024-08-29 14:50:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Sarah King',
+                    role: 'Building and Grounds Service Chief',
+                    "last logged in": '2024-08-28 10:00:00',
+                    status: 'inactive'
+                },
+                {
+                    name: 'Chris Lee',
+                    role: 'Warehouseman',
+                    "last logged in": '2024-08-27 11:10:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Rachel Morris',
+                    role: 'Admin',
+                    "last logged in": '2024-08-26 16:30:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Tom Brown',
+                    role: 'Director',
+                    "last logged in": '2024-08-25 18:20:00',
+                    status: 'active'
+                },
+                {
+                    name: 'Anna Smith',
+                    role: 'Civil and Sanitary Services Chief',
+                    "last logged in": '2024-08-24 08:05:00',
+                    status: 'inactive'
+                }
+            ],
+            'addUser': [
+                {
+                    success: true
                 }
             ]
         }

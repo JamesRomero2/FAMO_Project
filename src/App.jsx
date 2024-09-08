@@ -1,4 +1,3 @@
-import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import { ToastContainer } from 'react-toastify';
@@ -16,6 +15,7 @@ import ReportHistory from './pages/ReportHistory';
 import ApprovalArchive from './pages/ApprovalArchive';
 import { useState, useEffect } from 'react';
 import { AppDataProvider } from './provider/AppDataProvider';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
   return (
