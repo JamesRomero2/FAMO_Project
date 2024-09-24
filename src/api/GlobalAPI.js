@@ -1,17 +1,26 @@
 import axios, { AxiosHeaders } from "axios";
 
-// ENRICO
-// MAKE THIS TRUE IF BACKEND IS CONNECTED AND ADD API_URL
-// SIMILAR TO THIS
 const API_URL = "http://localhost/famoserver/api/v1/server.php";
-
+const LOGIN_URL = "http://localhost/famoserver/api/v1/login.php";
 
 const SERVER_API = axios.create({
     baseURL: API_URL,
 })
+const LOGIN_SERVER_API = axios.create({
+    baseURL: LOGIN_URL,
+})
 
 export const requestToServer = async (method, eventName, data, HAS_BACKEND) => {
     if (HAS_BACKEND) {
+        const sessionData = sessionStorage.getItem("user");
+        const session = sessionData ? JSON.parse(sessionData) : null;
+
+        if (eventName !== "login" && session && session.session_id) {
+            data = {
+                ...data,
+                session_id: session.session_id,
+            };
+        }
         const config = {
             headers: new AxiosHeaders({
                 "Content-Type": "application/json",
@@ -27,7 +36,11 @@ export const requestToServer = async (method, eventName, data, HAS_BACKEND) => {
                     response = await SERVER_API.get("", {...config});
                     break;
                 case "post":
-                    response = await SERVER_API.post("",  data, config);
+                    if (eventName === 'login') {
+                        response = await LOGIN_SERVER_API.post("",  data, config);
+                    } else {
+                        response = await SERVER_API.post("",  data, config);
+                    }
                     break;
                 case "put":
                     response = await SERVER_API.put("",  data, config);

@@ -4,7 +4,7 @@ const NotificationItem = ({ message, timeElapsed, important }) => {
   return (
     <li
       className={`flex justify-between items-center py-2 cursor-pointer px-2 rounded-md mb-2 ${
-        important ? 'bg-sec' : ''
+        important === '1' ? 'bg-sec' : ''
       }`}
     >
       <span className="flex-1">{message}</span>

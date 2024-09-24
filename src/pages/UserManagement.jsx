@@ -2,7 +2,7 @@
 import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 import TablePanel from "../components/TablePanel";
 import Modal from 'react-modal';
-import { useCallback, useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useState, useEffect } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -12,7 +12,7 @@ const UserManagement = () => {
   const [addUserModal, setaddUserModal] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const initialization = useCallback(async() => {
-    requestToServer('get', 'allUsers', '', false)
+    requestToServer('get', 'allUsers', '', true)
       .then((response) => {
         setAllUsers(response)
       }).catch((error) => {
@@ -67,11 +67,14 @@ export const AddUserModal = ({
     formState: { errors },
     reset
   } = useForm();
+
+  const [roles, setRoles] = useState([]);
   
   const onSubmit = (data) => {
-    requestToServer('post', 'addUser', data, false)
+    requestToServer('post', 'addUser', data, true)
       .then((response) => {
-        if (response[0].success) {
+        console.log(response);
+        if (response === 1) {
           toast.success("User added successfully!");
           reset();
         } else {
@@ -91,6 +94,21 @@ export const AddUserModal = ({
   const handleClose = () => {
     onClose();
   };
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await requestToServer('get', 'fetchRoles', '', true);
+        setRoles(response); // Assuming response is an array of role objects
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+      }
+    };
+
+    if (isOpen) {
+      fetchRoles();
+    }
+  }, [isOpen]);
 
   return (
     <Modal
@@ -157,20 +175,23 @@ export const AddUserModal = ({
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">Mobile Number</label>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
               <input
-                type="tel"
-                {...register('mobileNumber', {
-                  required: 'Mobile Number is required',
+                type="email"
+                {...register('email', {
+                  required: 'Email is required',
                   pattern: {
-                    value: /^[0-9]{10}$/,
-                    message: 'Mobile Number must be 10 digits',
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Invalid email address',
                   },
                 })}
                 className={`shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline ${
-                  errors.mobileNumber ? 'border-red-500' : ''
+                  errors.email ? 'border-red-500' : ''
                 }`}
               />
+              {errors.email && (
+                <p className="text-red-500 text-xs italic">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -214,14 +235,11 @@ export const AddUserModal = ({
                 }`}
               >
                 <option value="">Select a role</option>
-                <option value="Administrator">Administrator</option>
-                <option value="Director">Director</option>
-                <option value="Warehouse Man 1">Warehouse Man 1</option>
-                <option value="Warehouse Man 2">Warehouse Man 2</option>
-                <option value="Chief 1">Chief 1</option>
-                <option value="Chief 2">Chief 2</option>
-                <option value="Chief 3">Chief 3</option>
-                <option value="Chief 4">Chief 4</option>
+                {roles.map(role => (
+                  <option key={role.id} value={role.id}>
+                    {role.description}
+                  </option>
+                ))}
               </select>
             </div>
 

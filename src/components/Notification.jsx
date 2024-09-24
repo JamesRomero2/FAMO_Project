@@ -20,7 +20,7 @@ const Notification = ({notificationItems}) => {
   // Sort notifications: important ones first, then by date
   const sortedNotifications = notificationItems.sort((a, b) => {
     if (a.important === b.important) {
-      return new Date(b.date_published) - new Date(a.date_published);
+      return new Date(b.created_at) - new Date(a.created_at);
     }
     return a.important ? -1 : 1;
   });
@@ -34,7 +34,7 @@ const Notification = ({notificationItems}) => {
             <NotificationItem
               key={index}
               message={notification.message}
-              timeElapsed={getTimeElapsed(notification.date_published)}
+              timeElapsed={getTimeElapsed(notification.created_at)}
               important={notification.important}
             />
           ))}
