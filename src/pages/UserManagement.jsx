@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
-import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
-import TablePanel from "../components/TablePanel";
+import { IoMdClose } from "react-icons/io";
 import Modal from 'react-modal';
 import { useCallback, useLayoutEffect, useState, useEffect } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-
+import DynamicTable from "../components/DynamicTable";
 import { requestToServer } from "../api/GlobalAPI";
 Modal.setAppElement('#root');
+
 const UserManagement = () => {
   const [addUserModal, setaddUserModal] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
@@ -39,19 +39,9 @@ const UserManagement = () => {
         <p className="font-bold text-lg">User Management</p>
         <div className="flex items-center justify-between gap-2">
           <button className="bg-blue-500 text-white px-4 py-2 rounded-md" onClick={() => setaddUserModal(true)}>Add User +</button>
-          <div className="px-4 py-2 flex items-center gap-2">Sort By <IoMdArrowDropdown size={'1.1em'}/></div>
         </div>
       </div>
-      <TablePanel
-          tableTitle="List of Users"
-          columnNames={['Name', 'Role', 'Last Logged In', 'Status']}
-          data={allUsers}
-          actionColumn={['delete', 'edit']}
-          search={false}
-          category={['']}
-          sort={false}
-          tableHeight={'h-full'}
-        />
+      <DynamicTable data={allUsers} tableTitle={"List of Users"} search={true} actions={['edit', 'delete']}/>
     </div>
   )
 }
@@ -99,7 +89,7 @@ export const AddUserModal = ({
     const fetchRoles = async () => {
       try {
         const response = await requestToServer('get', 'fetchRoles', '', true);
-        setRoles(response); // Assuming response is an array of role objects
+        setRoles(response);
       } catch (error) {
         console.error('Error fetching roles:', error);
       }

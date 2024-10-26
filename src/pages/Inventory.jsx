@@ -4,14 +4,46 @@ import RoundedPanel from "../components/RoundedPanel"
 import { PieChart, Pie, Cell, Tooltip } from 'recharts';
 import TablePanel from "../components/TablePanel";
 import Modal from 'react-modal';
-import { useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { IoMdClose } from "react-icons/io";
+import { requestToServer } from "../api/GlobalAPI";
+import DynamicTable from "../components/DynamicTable";
+
 Modal.setAppElement('#root');
 const categories = ['Electronics', 'Painting', 'Plumbing', 'Aircon Tech'];
+
 const Inventory = () => {
   const [addItemModal, setaddItemModal] = useState(false);
+  const [categoryPercent, setCategoryPercent] = useState([]);
+  const [pieChartDdetails, setPieChartDdetails] = useState([]);
+  const [productData, setProductData] = useState([]);
+
+  const initialization = useCallback(async() => {
+    requestToServer('get', 'inventoryCategoryPercentage', '', true)
+      .then((response) => {
+        setCategoryPercent(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+    requestToServer('get', 'pieChartDetails', '', true)
+      .then((response) => {
+        setPieChartDdetails(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+    requestToServer('get', 'fetchAllInventoryDashboard', '', true)
+      .then((response) => {
+        setProductData(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+    }, [],
+  )
+  
+
+
   const closeModal = () => {
     setaddItemModal(false);
   }
@@ -22,64 +54,16 @@ const Inventory = () => {
     { name: 'Out of Stock', value: 860 },
   ];
   const COLORS = ['#53DFB5', '#59C5F7', '#FF949F', '#FF9742'];
-  const data2 = [
-    { name: 'Civil and Sanitary', percentage: 41 },
-    { name: 'Lights, Sounds and Event', percentage: 29 },
-    { name: 'Electrical and Mechanical', percentage: 15 },
-    { name: 'Building and Grounds', percentage: 15 },
-  ];
-  const inventoryData = [
-    { 
-      "item name": 'Laptop', 
-      unit: 'pcs', 
-      quantity: 50, 
-      "new delivery": 10, 
-      "item out": 5, 
-      "item balance": 55, 
-      category: 'Electronics', 
-      "stock level": 'High' 
-    },
-    { 
-      "item name": 'Printer Ink', 
-      unit: 'bottles', 
-      quantity: 100, 
-      "new delivery": 50, 
-      "item out": 30, 
-      "item balance": 120, 
-      category: 'Office Supplies', 
-      "stock level": 'Mid' 
-    },
-    { 
-      "item name": 'Notebook', 
-      unit: 'pcs', 
-      quantity: 200, 
-      "new delivery": 100, 
-      "item out": 150, 
-      "item balance": 150, 
-      category: 'Stationery', 
-      "stock level": 'High' 
-    },
-    { 
-      "item name": 'Keyboard', 
-      unit: 'pcs', 
-      quantity: 40, 
-      "new delivery": 20, 
-      "item out": 30, 
-      "item balance": 30, 
-      category: 'Electronics', 
-      "stock level": 'Low' 
-    },
-    { 
-      "item name": 'Mouse', 
-      unit: 'pcs', 
-      quantity: 0, 
-      "new delivery": 50, 
-      "item out": 0, 
-      "item balance": 50, 
-      category: 'Electronics', 
-      "stock level": 'Out of Stock' 
-    }
-  ];
+
+  useLayoutEffect(() => {
+    initialization();
+  }, [initialization]);
+
+  const { totalItems, ...filteredData } = pieChartDdetails;
+  const chartData = Object.entries(filteredData).map(([key, value]) => ({
+    name: key, // Example: "lowItems", "fullItems", "reservedItems"
+    value: value, // Corresponding value
+  }));
   return (
     <div className="flex flex-col w-full relative">
       <div className="absolute top-0">
@@ -97,9 +81,9 @@ const Inventory = () => {
           <div className="flex flex-row items-center justify-between">
             <div className="">
               <p className="flex flex-row items-center justify-start gap-2 font-medium text-lg">Total Materials</p>
-              <p className="font-bold">4,056 Items <span className="font-light text-sm">as of August 2024</span></p>
+              <p className="font-bold">{totalItems} Items <span className="font-light text-sm">as of August 2024</span></p>
               <div className="flex flex-col justify-center mt-6">
-                {data.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <div key={index} className="flex items-center mx-2">
                     <div
                       className="w-3 h-3 mr-2 rounded-full"
@@ -114,7 +98,7 @@ const Inventory = () => {
             <div className="flex justify-center items-center ">
               <PieChart width={300} height={150}>
                 <Pie
-                  data={data}
+                  data={chartData}
                   cx={150}
                   cy={150}
                   startAngle={180}  // Start from the left middle of the circle
@@ -123,7 +107,7 @@ const Inventory = () => {
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {data.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -134,7 +118,7 @@ const Inventory = () => {
         </RoundedPanel>
         <RoundedPanel bgcolor={'flex-1 bg-slate-100'}>
           <p className="flex flex-row items-center justify-start gap-2 font-medium mb-2">Category</p>
-          {data2.map((item) => (
+          {categoryPercent.map((item) => (
             <>
               <div className="flex justify-between mb-1">
                 <span className="text-base font-medium text-gray-700">{item.name}</span>
@@ -151,16 +135,7 @@ const Inventory = () => {
 
         </RoundedPanel>
       </div>
-      <TablePanel
-          tableTitle="Materials"
-          columnNames={['Item Name', 'Unit', 'Quantity', 'New Delivery', 'Item Out', 'Item Balance', 'Category', 'Stock Level']}
-          data={inventoryData}
-          actionColumn={[]}
-          search={false}
-          category={['Electronics', 'Painting', 'Plumbing', 'Aircon Tech']}
-          sort={false}
-          tableHeight={'h-full'}
-        />
+      <DynamicTable data={productData} tableTitle={"Product Inventory"} search={false} actions={[]}/>
     </div>
   )
 }

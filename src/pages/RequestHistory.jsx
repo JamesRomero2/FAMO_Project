@@ -5,7 +5,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { IoMdClose } from "react-icons/io";
 import Modal from 'react-modal';
+import { requestToServer } from "../api/GlobalAPI";
 Modal.setAppElement('#root');
+
 const categories = ['Electronics', 'Painting', 'Plumbing', 'Aircon Tech'];
 const RequestHistory = () => {
   const [newRequest, setNewRequest] = useState(false);
@@ -94,20 +96,28 @@ export const RequestForm = ({
     toast.success('Item deleted successfully!');
   };
   
-  const onSubmit = (data) => {
-    toast.success('Request sent for approval!');
-    console.log(data);
-    reset();
+  const sendRequest = () => {
+    console.log(items);
+    requestToServer('post', 'addRequest', items, true)
+      .then((response) => {
+        if (response === 1) {
+          onClose();
+          setItems([]);
+          toast.success('Request sent for approval!');
+          reset();
+        } else {
+          toast.error(`Failed Sending Request`);
+        }
+      }).catch((error) => {
+        toast.error(`Failed Sending Request ${error}`);
+      });
+    
   };
 
   const handleCancel = () => {
-    reset(); // Reset the form fields
-    // toast.info('Form has been cleared.');
+    reset();
     onClose();
   };
-  // const handleSubmit = () => {
-  //   onClose();
-  // };
 
   const handleClose = () => {
     onClose();
@@ -146,8 +156,8 @@ export const RequestForm = ({
           </button>
         </div>
         <div className={`overflow-y-auto`}>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Item Name */}
+        <form onSubmit={handleSubmit(handleAddToTable)}>
+         {/* Item Name */}
           <div className="mb-4">
             <label htmlFor="itemName" className="block text-sm font-medium text-gray-700">Item Name</label>
             <input
@@ -202,8 +212,7 @@ export const RequestForm = ({
           {/* Buttons */}
           <div className="flex gap-4 mb-4">
             <button
-              type="button"
-              onClick={handleSubmit(handleAddToTable)}
+              type="submit"
               className="w-full py-2 px-4 border border-transparent rounded-md bg-green-600 text-white hover:bg-green-700"
             >
               Add to Table
@@ -262,7 +271,8 @@ export const RequestForm = ({
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
+              onClick={handleSubmit(sendRequest)}
               className="w-full py-2 px-4 border border-transparent rounded-md bg-blue-600 text-white hover:bg-blue-700"
             >
               Send for Approval
