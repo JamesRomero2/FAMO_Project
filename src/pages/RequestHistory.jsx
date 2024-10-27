@@ -1,26 +1,34 @@
 /* eslint-disable react/prop-types */
 import TablePanel from "../components/TablePanel";
-import { useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { IoMdClose } from "react-icons/io";
 import Modal from 'react-modal';
 import { requestToServer } from "../api/GlobalAPI";
+import { fetchItemCategory } from "../utils/FetchConstant";
 Modal.setAppElement('#root');
 
-const categories = ['Electronics', 'Painting', 'Plumbing', 'Aircon Tech'];
 const RequestHistory = () => {
   const [newRequest, setNewRequest] = useState(false);
+  const [requestData, setRequestData] = useState([]);
   const closeModal = () => {
     setNewRequest(false);
   }
-  const requestData = [
-    { 'request id': 'REQ001', 'requested by': 'Warehouse Man 1', 'request date': '2024-09-01', status: 'Pending' },
-    { 'request id': 'REQ002', 'requested by': 'Warehouse Man 2', 'request date': '2024-09-02', status: 'Approved' },
-    { 'request id': 'REQ003', 'requested by': 'Warehouse Man 3', 'request date': '2024-09-03', status: 'Rejected' },
-    { 'request id': 'REQ004', 'requested by': 'Warehouse Man 1', 'request date': '2024-09-04', status: 'Pending' },
-    { 'request id': 'REQ005', 'requested by': 'Warehouse Man 2', 'request date': '2024-09-05', status: 'Approved' },
-  ];
+
+  const initialization = useCallback(async () => {
+    requestToServer('get', 'getRequestData', '', true)
+      .then((response) => {
+        setRequestData(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+  }, []);
+
+  useLayoutEffect(() => {
+    initialization();
+  }, [initialization]);
+
   return (
     <div className="flex flex-col w-full relative">
       <div className="absolute top-0">
@@ -54,6 +62,7 @@ export const RequestForm = ({
   const [items, setItems] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [categories, setCategories] = useState([]);
   const {
     register,
     handleSubmit,
@@ -65,7 +74,6 @@ export const RequestForm = ({
 
   const handleAddToTable = (data) => {
     if (isEditing) {
-      // Edit the item at the specified index
       const updatedItems = [...items];
       updatedItems[editIndex] = data;
       setItems(updatedItems);
@@ -73,12 +81,10 @@ export const RequestForm = ({
       setEditIndex(null);
       toast.success('Item edited successfully!');
     } else {
-      // Add a new item to the table
       setItems((prevItems) => [...prevItems, data]);
       toast.success('Item added to the table!');
     }
 
-    // Reset the form fields
     reset();
   };
   const handleEdit = (index) => {
@@ -111,7 +117,6 @@ export const RequestForm = ({
       }).catch((error) => {
         toast.error(`Failed Sending Request ${error}`);
       });
-    
   };
 
   const handleCancel = () => {
@@ -122,6 +127,14 @@ export const RequestForm = ({
   const handleClose = () => {
     onClose();
   };
+
+  const initialization = useCallback(async () => {
+    setCategories(fetchItemCategory());
+  }, []);
+
+  useLayoutEffect(() => {
+    initialization();
+  }, [initialization]);
 
   return (
     <Modal
@@ -283,9 +296,6 @@ export const RequestForm = ({
       </div>
     </Modal>
   )
-
-
-
 }
 
 export default RequestHistory
