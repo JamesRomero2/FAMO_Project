@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [suppSumm, setSuppSumm] = useState([]);
   const [productData, setProductData] = useState([]);
   const [outOfStock, setOutOfStock] = useState([]);
+  const [lowStock, setLowStock] = useState([]);
   const navigate = useNavigate();
   const initialization = useCallback(async () => {
     const user = sessionStorage.getItem('user');
@@ -63,6 +64,12 @@ const Dashboard = () => {
       }).catch((error) => {
         console.error('Server GET error:', error);
       });
+    requestToServer('get', 'getBelowThresholdItems', '', true)
+      .then((response) => {
+        setLowStock(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
     
   }, [navigate]);
   useLayoutEffect(() => {
@@ -74,6 +81,7 @@ const Dashboard = () => {
       <div className="flex flex-col flex-1 gap-2">
         <Shelf supplyAmnt={shelfData.supply} categoryAmnt={shelfData.category} usersAmnt={shelfData.user}/>
         <DynamicTable data={productData} tableTitle={"Product Inventory"} search={false} actions={[]}/>
+        <DynamicTable data={lowStock} tableTitle={"Low Stock Items"} search={false} actions={[]}/>
         <DynamicTable data={outOfStock} tableTitle={"Out of Stock Supply"} search={false} actions={[]}/>
       </div>
       <div className="flex flex-col gap-4">

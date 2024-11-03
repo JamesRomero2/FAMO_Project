@@ -16,7 +16,7 @@ const toParagraphCase = (str) => {
   return lowerCased.charAt(0).toUpperCase() + lowerCased.slice(1);
 };
 
-const DynamicTable = ({ data, tableTitle, search, actions }) => {
+const DynamicTable = ({ data, tableTitle, search, actions, onItemClick = () => {} }) => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -27,6 +27,12 @@ const DynamicTable = ({ data, tableTitle, search, actions }) => {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
+  };
+
+  const handleRowClick = (item, action) => {
+    if (typeof onItemClick === 'function') {
+      onItemClick(item, action);  // Call only if onItemClick is a function
+    }
   };
 
   // Sorting logic based on the sortConfig state
@@ -106,7 +112,7 @@ const DynamicTable = ({ data, tableTitle, search, actions }) => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredData.map((item, idx) => (
-                <tr key={idx}>
+                <tr key={idx} onClick={() => handleRowClick(item)} className="cursor-pointer hover:bg-gray-100">
                   {headers.map((key) => (
                     <td
                       key={key}
@@ -127,6 +133,7 @@ const DynamicTable = ({ data, tableTitle, search, actions }) => {
                                 key={action}
                                 className="relative group p-2 rounded hover:bg-gray-100"
                                 aria-label={action}
+                                onClick={() => handleRowClick(item, action)}
                               >
                                 <IconComponent className="text-gray-500" />
                                 <span className="absolute bottom-full mb-1 hidden group-hover:inline-block text-xs bg-gray-700 text-white py-1 px-2 rounded z-20">

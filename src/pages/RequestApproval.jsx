@@ -1,34 +1,54 @@
-import TablePanel from "../components/TablePanel"
+import DynamicTable from "../components/DynamicTable";
 import { useNavigate } from 'react-router-dom';
+import { useCallback, useLayoutEffect, useState } from "react";
+import { requestToServer } from "../api/GlobalAPI";
+import RequestModal from "../components/RequestModal";
 
 const RequestApproval = () => {
   const navigate = useNavigate();
+  const [selectedRequestID, setSelectedRequestID] = useState('');
+  const [itemModal, setItemModal] = useState(false);
+  const [requestData, setRequestData] = useState([]);
   const handleClick = (redirect) => {
     navigate(redirect);
   };
-  const requestData = [
-    { 'request id': 'REQ001', 'requested by': 'Warehouse Man 1', 'request date': '2024-09-01', status: 'Pending' },
-    { 'request id': 'REQ002', 'requested by': 'Warehouse Man 2', 'request date': '2024-09-02', status: 'Approved' },
-    { 'request id': 'REQ003', 'requested by': 'Warehouse Man 3', 'request date': '2024-09-03', status: 'Rejected' },
-    { 'request id': 'REQ004', 'requested by': 'Warehouse Man 1', 'request date': '2024-09-04', status: 'Pending' },
-    { 'request id': 'REQ005', 'requested by': 'Warehouse Man 2', 'request date': '2024-09-05', status: 'Approved' },
-  ];
+  const initialization = useCallback(async () => {
+    requestToServer('get', 'getRequestData', '', true)
+      .then((response) => {
+        setRequestData(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+  }, []);
+
+  const closeItemModal = () => {
+    setItemModal(false);
+  }
+
+  const handleItemClick = (item, action) => {
+    console.log(item);
+    setSelectedRequestID(item);
+    setItemModal(true);
+  };  
+
+  useLayoutEffect(() => {
+    initialization();
+  }, [initialization]);
   return (
     <div className="flex flex-col w-full relative">
+      <div className="absolute top-0">
+        <RequestModal 
+          isOpen={itemModal}
+          onClose={closeItemModal}
+          requestData={selectedRequestID}
+          viewingOnly={false}
+        />
+      </div>
       <div className="flex flex-row items-center justify-between mb-4">
         <p className="font-bold text-lg">Request Approval</p>
         <button className="bg-blue-500 text-white px-4 py-2 rounded-md h-fit" onClick={() => handleClick('/requestapprovalarchive')}>Archive +</button>
       </div>
-      <TablePanel
-          tableTitle="Request Status"
-          columnNames={['Request ID', 'Requested By', 'Request Date', 'Status']}
-          data={requestData}
-          actionColumn={['archive', 'delete']}
-          search={true}
-          category={['Approved', 'Viewed', 'Pending', 'Reject']}
-          sort={true}
-          tableHeight={'h-full'}
-        />
+      <DynamicTable data={requestData} tableTitle={"Request Status"} search={false} actions={['archive']} onItemClick={handleItemClick}/>
     </div>
   )
 }

@@ -1,20 +1,33 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
-import TablePanel from "../components/TablePanel";
+import DynamicTable from "../components/DynamicTable";
 import { useCallback, useLayoutEffect, useState } from "react";
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { IoMdClose } from "react-icons/io";
 import Modal from 'react-modal';
 import { requestToServer } from "../api/GlobalAPI";
-import { fetchItemCategory } from "../utils/FetchConstant";
+import { fetchDestination, fetchItemCategory, fetchItemUnitOfMeasurement } from "../utils/FetchConstant";
+import RequestModal from "../components/RequestModal";
 Modal.setAppElement('#root');
 
 const RequestHistory = () => {
   const [newRequest, setNewRequest] = useState(false);
+  const [selectedRequestID, setSelectedRequestID] = useState('');
+  const [itemModal, setItemModal] = useState(false);
   const [requestData, setRequestData] = useState([]);
   const closeModal = () => {
     setNewRequest(false);
   }
+  const closeItemModal = () => {
+    setItemModal(false);
+  }
+
+  const handleItemClick = (item, action) => {
+    console.log(item);
+    setSelectedRequestID(item);
+    setItemModal(true);
+  };
 
   const initialization = useCallback(async () => {
     requestToServer('get', 'getRequestData', '', true)
@@ -36,21 +49,18 @@ const RequestHistory = () => {
           isOpen={newRequest}
           onClose={closeModal}
         />
+        <RequestModal 
+          isOpen={itemModal}
+          onClose={closeItemModal}
+          requestData={selectedRequestID}
+          viewingOnly={true}
+        />
       </div>
       <div className="flex flex-row items-center justify-between mb-4">
         <p className="font-bold text-lg">Request History</p>
         <button className="bg-blue-500 text-white px-4 py-2 rounded-md h-fit" onClick={() => setNewRequest(true)}>Create New Request</button>
       </div>
-      <TablePanel
-          tableTitle="Request"
-          columnNames={['Request ID', 'Requested By', 'Request Date', 'Status']}
-          data={requestData}
-          actionColumn={[]}
-          search={true}
-          category={['Request ID', 'Requested By', 'Request Date', 'Status']}
-          sort={true}
-          tableHeight={'h-full'}
-        />
+      <DynamicTable data={requestData} tableTitle={"Request"} search={false} actions={['edit', 'delete']} onItemClick={handleItemClick}/>
     </div>
   )
 }
@@ -63,6 +73,8 @@ export const RequestForm = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [unitsOfMeasurement, setUnitsOfMeasurement] = useState([]);
+  const [destination, setDestination] = useState([]);
   const {
     register,
     handleSubmit,
@@ -92,6 +104,8 @@ export const RequestForm = ({
     setValue('itemName', item.itemName);
     setValue('category', item.category);
     setValue('quantity', item.quantity);
+    setValue('UOM', item.UOM);
+    setValue('destination', item.destination);
     setValue('justification', item.justification);
     setIsEditing(true);
     setEditIndex(index);
@@ -103,7 +117,6 @@ export const RequestForm = ({
   };
   
   const sendRequest = () => {
-    console.log(items);
     requestToServer('post', 'addRequest', items, true)
       .then((response) => {
         if (response === 1) {
@@ -129,7 +142,21 @@ export const RequestForm = ({
   };
 
   const initialization = useCallback(async () => {
-    setCategories(fetchItemCategory());
+    fetchItemCategory().then((result) => {
+      setCategories(result);
+    }).catch((err) => {
+      console.error(err);
+    })
+    fetchItemUnitOfMeasurement().then((result) => {
+      setUnitsOfMeasurement(result);
+    }).catch((err) => {
+      console.error(err);
+    })
+    fetchDestination().then((result) => {
+      setDestination(result);
+    }).catch((err) => {
+      console.error(err);
+    })
   }, []);
 
   useLayoutEffect(() => {
@@ -198,16 +225,47 @@ export const RequestForm = ({
             {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
           </div>
 
-          {/* Quantity */}
-          <div className="mb-4">
-            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
-            <input
-              id="quantity"
-              type="number"
-              {...register('quantity', { required: 'Quantity is required', min: { value: 1, message: 'Quantity must be at least 1' } })}
-              className={`mt-1 block w-full border rounded-md p-2 ${errors.quantity ? 'border-red-500' : 'border-gray-300'}`}
-            />
-            {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
+          <div className="flex flex-row items-center justify-between gap-2">
+            <div className="mb-4 flex-1">
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+              <input
+                id="quantity"
+                type="number"
+                {...register('quantity', { required: 'Quantity is required', min: { value: 1, message: 'Quantity must be at least 1' } })}
+                className={`mt-1 block w-full border rounded-md p-2 ${errors.quantity ? 'border-red-500' : 'border-gray-300'}`}
+              />
+              {errors.quantity && <p className="text-red-500 text-sm">{errors.quantity.message}</p>}
+            </div>
+
+            <div className="mb-4 flex-1">
+              <label htmlFor="UOM" className="block text-sm font-medium text-gray-700">Unit of Measurement</label>
+              <select
+                id="UOM"
+                {...register('UOM', { required: 'Unit is required' })}
+                className={`mt-1 block w-full border rounded-md p-2 ${errors.UOM ? 'border-red-500' : 'border-gray-300'}`}
+              >
+                <option value="">Select Unit</option>
+                {unitsOfMeasurement.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              {errors.UOM && <p className="text-red-500 text-sm">{errors.UOM.message}</p>}
+            </div>
+
+            <div className="mb-4 flex-1">
+              <label htmlFor="destination" className="block text-sm font-medium text-gray-700">Destination</label>
+              <select
+                id="destination"
+                {...register('destination', { required: 'Destination is required' })}
+                className={`mt-1 block w-full border rounded-md p-2 ${errors.destination ? 'border-red-500' : 'border-gray-300'}`}
+              >
+                <option value="">Select Destination</option>
+                {destination.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              {errors.destination && <p className="text-red-500 text-sm">{errors.destination.message}</p>}
+            </div>
           </div>
 
           {/* Justification */}
@@ -242,6 +300,8 @@ export const RequestForm = ({
                     <th className="py-2 px-4 border">Item Name</th>
                     <th className="py-2 px-4 border">Category</th>
                     <th className="py-2 px-4 border">Quantity</th>
+                    <th className="py-2 px-4 border">Unit of Measurement</th>
+                    <th className="py-2 px-4 border">Destination</th>
                     <th className="py-2 px-4 border">Justification</th>
                     <th className="py-2 px-4 border">Actions</th>
                   </tr>
@@ -252,6 +312,8 @@ export const RequestForm = ({
                       <td className="py-2 px-4 border">{item.itemName}</td>
                       <td className="py-2 px-4 border">{item.category}</td>
                       <td className="py-2 px-4 border">{item.quantity}</td>
+                      <td className="py-2 px-4 border">{item.UOM}</td>
+                      <td className="py-2 px-4 border">{item.destination}</td>
                       <td className="py-2 px-4 border">{item.justification}</td>
                       <td className="py-2 px-4 border">
                         <button
@@ -285,7 +347,7 @@ export const RequestForm = ({
             </button>
             <button
               type="button"
-              onClick={handleSubmit(sendRequest)}
+              onClick={sendRequest}
               className="w-full py-2 px-4 border border-transparent rounded-md bg-blue-600 text-white hover:bg-blue-700"
             >
               Send for Approval
