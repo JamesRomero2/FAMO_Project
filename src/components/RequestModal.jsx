@@ -9,6 +9,18 @@ const RequestModal = ({requestData, viewingOnly, isOpen, onClose}) => {
     onClose();
   };
 
+  const approveRequest = () => {
+    const passData = {
+      requestInfo: requestData
+    }
+    requestToServer('post', 'approveRequest', passData, true)
+      .then((response) => {
+        console.log(response);
+      }).catch((error) => {
+        console.error('Server GET error:', error);
+      });
+  }
+
   useEffect(() => {
     if (isOpen && requestData !== '' && requestData !== undefined) {
       const payload = {
@@ -122,7 +134,7 @@ const RequestModal = ({requestData, viewingOnly, isOpen, onClose}) => {
                 </button>
                 <button
                   type="button"
-                  // onClick={sendRequest}
+                  onClick={approveRequest}
                   className="w-full py-2 px-4 border border-transparent rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Approved
